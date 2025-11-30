@@ -8,4 +8,6 @@ End: -
 
 --------------------------------------------------------------------------------------
 
-**Phase 1**: Implement a lexical analyzer (Scanner)
+# Phase 1
+
+Implement a lexical analyzer (Scanner)
