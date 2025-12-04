@@ -2,6 +2,7 @@
 # Melika Alizadeh - 401106255
 input_text = ''
 pos = 0
+target_pos = 1
 lineno = 1
 tokens = []
 errors = []
@@ -113,9 +114,11 @@ def advance():
 
 
 def read_comment():
-    global lineno, pos, input_text, errors
+    global lineno, pos, input_text, errors, target_pos
 
     start_line = lineno
+    target_pos += 1
+    start_pos = pos
 
     if current_char() == '/' and lookahead_char() == '/':
         advance()  # skip first /
@@ -133,16 +136,34 @@ def read_comment():
         advance()  # skip /
         advance()  # skip *
 
-        comment_start = pos - 2
+        comment_start_pos = start_pos
 
         while True:
             if current_char() is None:
-                unclosed_text = input_text[comment_start:min(
-                    comment_start + 7, len(input_text))]
-                if len(input_text) - comment_start > 7:
-                    unclosed_text += '…'
+                unclosed_text = input_text[comment_start_pos:pos]
+                display_text = unclosed_text
+                target_pos += 1
+                if len(unclosed_text) > 10:
+                    display_text = unclosed_text[:9] + '...'
+
                 errors.append(
-                    (start_line, unclosed_text, 'Open comment at EOF'))
+                    (start_line, display_text, 'Open comment at EOF'))
+
+                temp_pos = start_pos
+                target_pos += start_line
+                temp_lineno = start_line
+
+                while temp_pos < len(input_text):
+                    if temp_lineno == target_pos:
+                        pos = temp_pos
+                        lineno = target_pos
+                        break
+                    if input_text[temp_pos] == '\n':
+                        temp_lineno += 1
+                    temp_pos += 1
+                else:
+                    pos = len(input_text)
+
                 return True
 
             if current_char() == '*' and lookahead_char() == '/':
@@ -245,14 +266,14 @@ def write_tokens():
             token_line, token_type, token_value = token
             while current_line < token_line:
                 if line_tokens:
-                    f.write(f"{current_line}. {' '.join(line_tokens)}\n")
+                    f.write(f"{current_line}.\t{' '.join(line_tokens)}\n")
                     line_tokens = []
                 current_line += 1
 
             line_tokens.append(f"({token_type}, {token_value})")
 
         if line_tokens:
-            f.write(f"{current_line}. {' '.join(line_tokens)}\n")
+            f.write(f"{current_line}.\t{' '.join(line_tokens)}\n")
 
 
 def write_symbol_table():
