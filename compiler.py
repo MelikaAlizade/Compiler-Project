@@ -221,12 +221,23 @@ def read_identifier(token_line):
         id_str += current_char()
         advance()
 
-    if current_char() and not is_whitespace(current_char()) and \
-       current_char() not in ['(', ')', '[', ']', '{', '}', ';', ':', ',', '+', '-', '*', '/', '=', '<'] and \
-       not is_digit(current_char()) and not is_letter(current_char()):
-        error_str = id_str + current_char()
+    ch = current_char()
+
+    is_symbol_or_whitespace = ch is None or is_whitespace(ch) or ch in symbols
+
+    if ch and not is_id_char(ch) and not is_symbol_or_whitespace:
+
+        if not id_str:
+            error_str = ''
+
+        else:
+            error_str = id_str
+
+        while current_char() and not is_whitespace(current_char()) and current_char() not in symbols:
+            error_str += current_char()
+            advance()
+
         errors.append((token_line, error_str, 'Illegal character'))
-        advance()
         return get_next_token()
 
     if id_str in keywords:
